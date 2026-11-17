@@ -10,3 +10,23 @@
 
 /* TIAL blush-pink palette refinement */
 :root{--ink:#352630;--muted:#95858c;--line:#f0e3e7;--purple:#b97890;--pink:#c987a0}
+
+/* Operational workspaces: Orders and Customers */
+.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:700;white-space:nowrap;background:#f3eff2;color:#786b73}
+.status-pill.good{background:#eaf5ef;color:#367b5a}.status-pill.warm{background:#fff4e2;color:#a8752c}.status-pill.bad{background:#fcebed;color:#ad5262}
+.orders-workspace,.customers-workspace{margin-top:17px}
+.orders-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.orders-summary>div{border:1px solid var(--line);border-radius:12px;background:#fffafb;padding:14px;min-width:0}
+.orders-summary small,.orders-summary span{display:block;color:var(--muted);font-size:9px}
+.orders-summary strong{display:block;font:800 22px Manrope;letter-spacing:-.5px;margin:8px 0 4px;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.orders-summary span{font-size:8px}
+.orders-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+.orders-table{min-width:760px;margin:0}
+.orders-table th{padding:13px 12px;background:#fcf7f8}
+.orders-table td{padding:13px 12px;vertical-align:middle}
+.orders-table tbody tr:hover{background:#fffbfc}
+.order-number{font-size:11px;color:var(--ink)}
+.row-sub{display:block;font-size:8px;color:var(--muted);margin-top:4px;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.amount-cell{text-align:right}
+.orders-footnote{font-size:9px;line-height:1.6;color:var(--muted);padding:12px 3px 2px}
+@media(max-width:720px){.orders-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.orders-summary>div{padding:12px}.orders-summary strong{font-size:19px}}
