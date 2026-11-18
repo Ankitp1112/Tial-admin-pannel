@@ -1,45 +1,52 @@
-# TIAL Admin Connector — app configuration patch
+# TIAL customer account extensions — app configuration patch
 
-Apply this to the existing **Tial Admin Connector** app configuration. Do not create a second app and do not rotate or expose credentials.
+Apply these to the existing **Tial Admin Connector** app project. Do not create a second Shopify app and do not rotate or expose credentials.
 
-## Required Customer Account API scope
+## Required Customer Account API scopes
 
-Merge the following scope into the app's existing `shopify.app.toml` `[access_scopes]` list. Preserve every existing scope:
+Merge both scopes into the existing `shopify.app.toml` `[access_scopes]` list. Preserve every existing Admin API scope:
 
 ```toml
 [access_scopes]
 scopes = "..., customer_read_customers, customer_read_orders"
 ```
 
-This is separate from the existing Admin API `read_customers` scope. The extension requires both Customer Account API scopes: `customer_read_customers` for profile data and `customer_read_orders` for order history. The extension reads the signed-in customer's own profile and order data through Shopify's Customer Account API.
+These are Customer Account API scopes, separate from Admin API `read_customers` and `read_orders`. The profile query requires `customer_read_customers`; the recent-order query requires `customer_read_orders`.
 
-## Extension registration
+## Two separate extensions — required by Shopify
 
-Copy the contents of this folder into the existing app project under:
+Shopify does not allow a full-page target and another target in the same extension. The two prepared extensions are deliberately separate:
 
-```
-extensions/tial-account/
-```
+1. Copy `shopify/customer-account-extension/` into the app project as `extensions/tial-account/`.
+   - Full-page target: `customer-account.page.render`
+   - Handle: `tial-account`
+2. Copy `shopify/customer-account-profile-block/` into the app project as `extensions/tial-profile-block/`.
+   - Profile block target: `customer-account.profile.block.render`
+   - Handle: `tial-profile-block`
 
-The extension config deliberately omits `uid`: Shopify CLI generates and manages that identifier when the extension is scaffolded/registered. Do not invent one or change the handle after deployment.
+Each folder contains its own `shopify.extension.toml`, `package.json`, and source module. Shopify CLI must generate and manage a unique `uid` for each extension. Do not invent a UID manually.
 
-## Deployment checklist
+## Deployment and verification checklist
 
-1. Open the existing Tial Admin Connector app project.
-2. Merge the Customer Account API scope above into its existing `shopify.app.toml`.
-3. Run `shopify app generate extension --template customer_account_ui --name tial-account` if the CLI project requires a generated extension scaffold; otherwise copy these prepared files into `extensions/tial-account/`.
-4. Keep the generated `uid` in the generated extension TOML if Shopify CLI adds one; retain this package's targets, modules, API version, and capabilities.
-5. Run `shopify app dev` and preview the TIAL Account page and Profile block against the development store.
-6. Run `shopify app deploy` and confirm the app version containing **TIAL Account**.
-7. In Shopify Admin, open **Settings → Customer accounts → Customize** and add/enable the TIAL Account extension page if Shopify presents it as an available page/extension.
-8. Test with a customer account that has orders and another account with no orders.
-9. Confirm the new page appears in the Customer Account pages list. Do not publish the storefront theme as part of this process.
+1. Open the existing Tial Admin Connector Shopify CLI project.
+2. Merge both Customer Account API scopes above into its existing `shopify.app.toml`, preserving all current scopes and app settings.
+3. Copy the two extension folders into the existing app's `extensions/` directory using the names above.
+4. Run `shopify app dev`; let Shopify CLI register/generate each extension UID and resolve dependencies.
+5. Preview both extensions in the Shopify Dev Console. Confirm the full-page extension and profile block are listed separately.
+6. Test with a signed-in customer who has orders and another who has none. Verify profile data, email, order dates, amounts, and status fields.
+7. Run `shopify app deploy` only after the previews pass. Review the generated app version and scopes before releasing it.
+8. In Shopify Admin, open **Settings → Customer accounts → Customize**. Add the TIAL full-page app page to customer-account navigation and place the profile block where appropriate.
+9. Verify the TIAL page is visible to a customer account. Confirm the profile block appears on the profile page. Do not publish or modify the storefront theme as part of this process.
 
-## Important boundaries
+## Security and scope boundaries
 
-- This package does not contain an app client secret, Admin API token, or customer data.
-- The extension only queries the authenticated customer's own profile and last five orders using the Customer Account API.
-- It does not call the Admin Studio endpoint from the browser and does not expose Admin API credentials.
-- The existing Admin Studio customer workspace remains the staff-side customer view.
-- Cross-device wishlist sync is a separate next phase. Implement it with customer metafields via the Customer Account API (including the appropriate write scope and consent/privacy review), not browser localStorage. Do not enable write scopes until that feature is implemented and reviewed.
-- Customer data access is subject to Shopify protected customer data requirements and app review/approval where applicable.
+- No app client secret, Admin API token, or customer records are included in these source files.
+- Customer profile and order data are queried from the authenticated customer's Customer Account API context.
+- The extension does not call Admin Studio or expose Admin API credentials in the browser.
+- Cross-device wishlist sync is not implemented in this phase. It requires customer metafield read/write support, the appropriate additional scopes, and privacy review.
+- Customer data access remains subject to Shopify protected customer data requirements and any applicable app review/approval.
+- The Admin Studio staff-side customer workspace is separate from these customer-facing extensions.
+
+## Deployment status
+
+Source preparation only. These files are not yet part of the actual Shopify app source project, have not been compiled with Shopify CLI, and have not been deployed or enabled in customer accounts.
