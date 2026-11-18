@@ -62,7 +62,7 @@ function TialAccountPage() {
   }
 
   if (!customer) {
-    return <s-page heading="Your TIAL account"><s-spinner /><s-text>Loading your account…</s-text></s-page>;
+    return <s-page heading="Your TIAL account"><s-spinner size="small-100" accessibilityLabel="Loading account details" /><s-text>Loading your account…</s-text></s-page>;
   }
 
   const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'TIAL customer';
