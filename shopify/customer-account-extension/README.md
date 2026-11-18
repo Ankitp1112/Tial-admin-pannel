@@ -1,22 +1,34 @@
-# TIAL Customer Account Extension
+# TIAL customer account experience
 
-Prepared extension source for the existing **Tial Admin Connector** Shopify app.
+Prepared source for two separate Customer Account UI extensions for the existing **Tial Admin Connector** Shopify app.
 
-## What is included
+## Extensions
 
-- A dedicated TIAL customer account page showing the signed-in customer's name, contact details, and latest five orders.
-- A TIAL profile block linking back to the TIAL account dashboard.
-- Shopify-native links to order history and profile management.
-- Customer data is queried directly from the Customer Account API for the authenticated customer; no Admin API token is used in extension code.
-- Requires both `customer_read_customers` and `customer_read_orders` Customer Account API scopes.
+### TIAL Account page
+- Full-page customer account dashboard.
+- Shows the authenticated customer's name, email, optional phone number, and latest five orders.
+- Links to Shopify's native profile and order-history pages.
 
-## Files
+### TIAL Profile block
+- Adds a TIAL-branded block to the native customer profile page.
+- Shows the authenticated customer's name and email.
+- Links to the TIAL Account page.
 
-- `shopify.extension.toml` — Customer Account UI extension registration and targets.
-- `src/TialAccountPage.jsx` — account dashboard page.
-- `src/TialProfileBlock.jsx` — profile page block.
-- `APP-CONFIG.md` — exact merge and deployment instructions for the existing app.
+Shopify requires full-page targets to be separate from other extension targets, so these are maintained as two distinct extension folders.
 
-## Not deployed yet
+## Required scopes
 
-This repository is the TIAL Admin Studio repository, not the source project for the installed Shopify app. These files are prepared here so they can be transferred into the existing Tial Admin Connector app project. The extension will not appear in customer accounts until that app is configured, deployed, and enabled in Shopify.
+- `customer_read_customers` — customer profile data.
+- `customer_read_orders` — order history and order status data.
+
+These are Customer Account API scopes, not the Admin API scopes with similar names.
+
+## Source folders
+
+- `shopify/customer-account-extension/` — full-page TIAL Account extension.
+- `shopify/customer-account-profile-block/` — native profile-page block.
+- `shopify/customer-account-extension/APP-CONFIG.md` — app integration and deployment checklist.
+
+## Not deployed
+
+This repository is the TIAL Admin Studio repository, not the source project for the installed Shopify app. The extension folders must be transferred into the existing Tial Admin Connector app project. Shopify CLI must generate each extension UID, compile and preview both extensions, and deploy the resulting app version before either appears in customer accounts.
