@@ -53,3 +53,6 @@
 .customer-loading{padding:18px;text-align:center;border:1px dashed #e7d6dd;border-radius:10px;color:var(--muted);font-size:10px;margin-bottom:12px}
 .customer-error{margin:0 0 12px}
 @media(max-width:720px){.customer-detail{padding:12px}.customer-facts{grid-template-columns:1fr 1fr}.customer-facts>div:last-child{grid-column:1/-1}.customer-detail-head h3{font-size:16px}}
+
+.integration-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:720px){.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
