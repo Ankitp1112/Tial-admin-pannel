@@ -1,0 +1,48 @@
+name: Prepare unreleased TIAL Shopify app version
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-unreleased-version:
+    runs-on: ubuntu-latest
+    env:
+      SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_SERVICE_ACCOUNT_TOKEN }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Shopify CLI
+        run: npm install --global @shopify/cli@latest
+
+      - name: Verify Shopify automation credential exists
+        run: |
+          if [ -z "$SHOPIFY_SERVICE_ACCOUNT_TOKEN" ]; then
+            echo "Missing SHOPIFY_SERVICE_ACCOUNT_TOKEN repository secret."
+            exit 1
+          fi
+
+      - name: Import existing dashboard-managed extensions
+        run: shopify app import-extensions --config tial-accounts --client-id b72bdfd83103c1ea9c66ef00dd88b449
+
+      - name: Install TIAL extension dependencies
+        run: |
+          npm install --prefix shopify/customer-account-extension
+          npm install --prefix shopify/customer-account-profile-block
+
+      - name: Validate app and extension configuration
+        run: shopify app config validate --config tial-accounts
+
+      - name: Build all app extensions
+        run: shopify app build --config tial-accounts
+
+      - name: Create an unreleased Shopify app version
+        run: shopify app deploy --config tial-accounts --no-release --allow-updates
