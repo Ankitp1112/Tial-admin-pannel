@@ -43,7 +43,7 @@ function TialProfileBlock() {
       <s-stack direction="block" gap="small">
         <s-text type="strong">{name || 'Welcome to TIAL'}</s-text>
         <s-text color="subdued">{customer.emailAddress?.emailAddress ?? ''}</s-text>
-        <s-link href="shopify:customer-account">Open your TIAL account dashboard</s-link>
+        <s-link href="extension:tial-account">Open your TIAL account dashboard</s-link>
       </s-stack>
     </s-section>
   );
