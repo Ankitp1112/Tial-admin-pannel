@@ -11,6 +11,7 @@ export default () => {
 
 function TialProfileBlock() {
   const [customer, setCustomer] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -21,12 +22,19 @@ function TialProfileBlock() {
         query: `query { customer { firstName lastName emailAddress { emailAddress } } }`,
       }),
     })
-      .then((response) => response.json())
-      .then(({ data }) => { if (active) setCustomer(data?.customer ?? null); })
-      .catch(() => { if (active) setCustomer(null); });
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Customer account request failed");
+        return response.json();
+      })
+      .then(({ data, errors }) => {
+        if (errors?.length || !data?.customer) throw new Error("Customer account data unavailable");
+        if (active) setCustomer(data.customer);
+      })
+      .catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, []);
 
+  if (error) return <s-text color="subdued">TIAL account details are temporarily unavailable. Please refresh and try again.</s-text>;
   if (!customer) return <s-text color="subdued">TIAL account details are loading.</s-text>;
 
   const name = [customer.firstName, customer.lastName].filter(Boolean).join(' ');
