@@ -1,0 +1,24 @@
+name = "Tial Admin Connector"
+client_id = "b72bdfd83103c1ea9c66ef00dd88b449"
+application_url = "https://tial.in"
+embedded = true
+extension_directories = [
+  "shopify/customer-account-extension",
+  "shopify/customer-account-profile-block"
+]
+web_directories = []
+
+[access_scopes]
+scopes = "read_products,write_products,read_content,write_content,read_files,write_files,read_orders,read_customers,read_reports,read_inventory,write_inventory,read_locations,customer_read_customers,customer_read_orders"
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = [
+  "https://fjzpknwcdecoxdvzrljy.supabase.co/functions/v1/tial-shopify-oauth-callback"
+]
+
+[webhooks]
+api_version = "2026-10"
+
+[build]
+automatically_update_urls_on_dev = false
