@@ -8,6 +8,7 @@ Prepared extension source for the existing **Tial Admin Connector** Shopify app.
 - A TIAL profile block linking back to the TIAL account dashboard.
 - Shopify-native links to order history and profile management.
 - Customer data is queried directly from the Customer Account API for the authenticated customer; no Admin API token is used in extension code.
+- Requires both `customer_read_customers` and `customer_read_orders` Customer Account API scopes.
 
 ## Files
 
