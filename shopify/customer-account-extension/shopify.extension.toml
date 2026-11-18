@@ -10,9 +10,6 @@ description = "A TIAL-branded customer account dashboard with profile details an
 target = "customer-account.page.render"
 module = "./src/TialAccountPage.jsx"
 
-[[extensions.targeting]]
-target = "customer-account.profile.block.render"
-module = "./src/TialProfileBlock.jsx"
 
 [extensions.capabilities]
 api_access = true
