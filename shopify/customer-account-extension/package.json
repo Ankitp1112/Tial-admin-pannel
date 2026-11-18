@@ -1,0 +1,9 @@
+{
+  "name": "tial-customer-account-extension",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@shopify/ui-extensions": "2026.10.x",
+    "preact": "^10.10.x"
+  }
+}

@@ -61,10 +61,18 @@ function CustomersWorkspace({rows,onSelect,selectedCustomer,detailLoading,detail
    </tbody></table></div>
    <div className="orders-footnote">Profile details are read-only. Customer changes, refunds and order actions remain in Shopify Admin.</div>
   </section>}
-  <div className="orders-table-wrap"><table className="orders-table"><thead><tr><th>CUSTOMER</th><th>EMAIL</th><th>ORDERS</th><th>LIFETIME SPEND</th><th>JOINED</th><th></th></tr></thead><tbody>
-   {rows.map((row:any)=><tr key={row.id}><td><b className="order-number">{row.name||"Customer"}</b></td><td>{row.email||"—"}</td><td>{fmt(row.orders)}</td><td><b>{row.spent||"—"}</b></td><td>{row.joined||"—"}</td><td><button className="customer-view-button" onClick={()=>onSelect(row.id)}>View profile ↗</button></td></tr>)}
+  <div className="customer-mobile-list">
+   {rows.map((row:any)=><article className="customer-mobile-card" key={row.id}>
+    <div className="customer-mobile-identity"><span className="customer-avatar">{String(row.name||row.email||"C").trim().charAt(0).toUpperCase()}</span><div><b>{row.name||"Name not provided"}</b><small>{row.email||"Email not available"}</small></div></div>
+    <div className="customer-mobile-stats"><div><small>Orders</small><b>{fmt(row.orders)}</b></div><div><small>Lifetime spend</small><b>{row.spent||"—"}</b></div><div><small>Joined</small><b>{row.joined||"—"}</b></div></div>
+    <button className="customer-mobile-open" onClick={()=>onSelect(row.id)}>View customer profile <span>↗</span></button>
+   </article>)}
+   {!rows.length&&<div className="customer-no-orders">No customers match this search.</div>}
+  </div>
+  <div className="customer-desktop-table"><div className="orders-table-wrap"><table className="orders-table"><thead><tr><th>CUSTOMER</th><th>EMAIL</th><th>ORDERS</th><th>LIFETIME SPEND</th><th>JOINED</th><th></th></tr></thead><tbody>
+   {rows.map((row:any)=><tr key={row.id}><td><b className="order-number">{row.name||"Name not provided"}</b></td><td>{row.email||"—"}</td><td>{fmt(row.orders)}</td><td><b>{row.spent||"—"}</b></td><td>{row.joined||"—"}</td><td><button className="customer-view-button" onClick={()=>onSelect(row.id)}>View profile ↗</button></td></tr>)}
    {!rows.length&&<tr><td colSpan={6} className="customer-no-orders">No customers match this search.</td></tr>}
-  </tbody></table></div>
+  </tbody></table></div></div>
   <div className="orders-footnote">Showing up to 50 latest Shopify customer records. Personal data is restricted to active TIAL owners and admins.</div>
  </div>;
 }
