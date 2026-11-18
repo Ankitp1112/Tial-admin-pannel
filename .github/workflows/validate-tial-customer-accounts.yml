@@ -12,6 +12,8 @@ permissions:
 jobs:
   validate-and-build:
     runs-on: ubuntu-latest
+    env:
+      SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_SERVICE_ACCOUNT_TOKEN }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -23,8 +25,15 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
 
-      - name: Install Shopify CLI
-        run: npm install --global @shopify/cli@latest
+      - name: Install Shopify CLI 5
+        run: npm install --global @shopify/cli@^5
+
+      - name: Verify Shopify automation credential exists
+        run: |
+          if [ -z "$SHOPIFY_SERVICE_ACCOUNT_TOKEN" ]; then
+            echo "Missing SHOPIFY_SERVICE_ACCOUNT_TOKEN repository secret."
+            exit 1
+          fi
 
       - name: Install extension dependencies
         run: |
@@ -32,7 +41,7 @@ jobs:
           npm install --prefix shopify/customer-account-profile-block
 
       - name: Validate app and extension configuration
-        run: shopify app config validate --config tial-accounts
+        run: shopify app config validate --config tial-accounts --no-input
 
       - name: Build app extensions
-        run: shopify app build --config tial-accounts
+        run: shopify app build --config tial-accounts --no-input
