@@ -30,3 +30,26 @@
 .amount-cell{text-align:right}
 .orders-footnote{font-size:9px;line-height:1.6;color:var(--muted);padding:12px 3px 2px}
 @media(max-width:720px){.orders-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.orders-summary>div{padding:12px}.orders-summary strong{font-size:19px}}
+
+/* TIAL customer profile integration */
+.customer-hint{font-size:10px;color:var(--muted);padding:11px 13px;background:#fffafb;border:1px solid var(--line);border-radius:10px;margin:0 0 13px}
+.customer-detail{border:1px solid #ead7df;border-radius:15px;background:linear-gradient(145deg,#fffafb,#fff);padding:16px;margin:0 0 15px;box-shadow:0 7px 24px #593b4707}
+.customer-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.customer-overline{font-size:8px;font-weight:800;letter-spacing:1.2px;color:#b97890}
+.customer-detail-head h3{font:800 18px Manrope;margin:6px 0 4px;color:var(--ink)}
+.customer-detail-head p{font-size:10px;color:var(--muted);margin:0;overflow-wrap:anywhere}
+.customer-close,.customer-view-button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 10px;color:#9c6077;font:700 9px 'DM Sans';cursor:pointer;white-space:nowrap}
+.customer-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0}
+.customer-facts>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;min-width:0}
+.customer-facts small,.customer-address small{display:block;color:var(--muted);font-size:8px;letter-spacing:.5px}
+.customer-facts b{display:block;font:800 15px Manrope;margin-top:6px;overflow-wrap:anywhere}
+.customer-address{background:#fcf7f8;border-radius:10px;padding:12px;margin-bottom:14px}
+.customer-address p{font-size:10px;line-height:1.6;margin:6px 0 3px;color:var(--ink)}
+.customer-address span{font-size:9px;color:var(--muted)}
+.customer-orders-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 9px}
+.customer-orders-head b{font:800 11px Manrope}.customer-orders-head span{font-size:8px;color:var(--muted)}
+.customer-orders-table{min-width:620px}
+.customer-no-orders{text-align:center;color:var(--muted);padding:20px}
+.customer-loading{padding:18px;text-align:center;border:1px dashed #e7d6dd;border-radius:10px;color:var(--muted);font-size:10px;margin-bottom:12px}
+.customer-error{margin:0 0 12px}
+@media(max-width:720px){.customer-detail{padding:12px}.customer-facts{grid-template-columns:1fr 1fr}.customer-facts>div:last-child{grid-column:1/-1}.customer-detail-head h3{font-size:16px}}
