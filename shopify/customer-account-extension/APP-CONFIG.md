@@ -8,10 +8,10 @@ Merge the following scope into the app's existing `shopify.app.toml` `[access_sc
 
 ```toml
 [access_scopes]
-scopes = "..., customer_read_customers"
+scopes = "..., customer_read_customers, customer_read_orders"
 ```
 
-This is separate from the existing Admin API `read_customers` scope. The extension reads the signed-in customer's own profile and order data through Shopify's Customer Account API.
+This is separate from the existing Admin API `read_customers` scope. The extension requires both Customer Account API scopes: `customer_read_customers` for profile data and `customer_read_orders` for order history. The extension reads the signed-in customer's own profile and order data through Shopify's Customer Account API.
 
 ## Extension registration
 
