@@ -47,8 +47,8 @@ function TialAccountPage() {
         return response.json();
       })
       .then(({ data, errors }) => {
-        if (errors?.length) throw new Error('Shopify could not load account details.');
-        if (active) setCustomer(data?.customer ?? null);
+        if (errors?.length || !data?.customer) throw new Error('Shopify could not load account details.');
+        if (active) setCustomer(data.customer);
       })
       .catch(() => {
         if (active) setError('We could not load your account right now. Please refresh and try again.');
