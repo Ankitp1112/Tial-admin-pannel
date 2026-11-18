@@ -1,6 +1,9 @@
 name: Prepare unreleased TIAL Shopify app version
 
 on:
+  push:
+    branches:
+      - cloud/shopify-customer-account-build
   workflow_dispatch:
 
 permissions:
