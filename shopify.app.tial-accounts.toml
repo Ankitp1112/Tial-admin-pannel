@@ -1,6 +1,6 @@
 name = "Tial Admin Connector"
 client_id = "b72bdfd83103c1ea9c66ef00dd88b449"
-application_url = "https://tial.in"
+application_url = "https://admin.tial.in"
 embedded = true
 extension_directories = [
   "extensions/",
