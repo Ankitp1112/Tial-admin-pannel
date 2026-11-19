@@ -44,6 +44,7 @@ function TialProfileBlock() {
     return (
       <s-section heading="YOUR TIAL SPACE">
         <s-text color="subdued">Your TIAL account details are temporarily unavailable. Please refresh and try again.</s-text>
+        <s-button onClick={() => shopify.navigation.navigate('extension://tial-account')} variant="secondary">Open TIAL account hub</s-button>
       </s-section>
     );
   }
@@ -67,7 +68,7 @@ function TialProfileBlock() {
           <s-heading>{name}</s-heading>
           {email ? <s-text color="subdued">{email}</s-text> : null}
           <s-text color="subdued">Your personal details stay protected in your Shopify account.</s-text>
-          <s-button href="extension:tial-account" variant="secondary">Open TIAL account hub</s-button>
+          <s-button onClick={() => shopify.navigation.navigate('extension://tial-account')} variant="secondary">Open TIAL account hub</s-button>
         </s-stack>
       </s-box>
     </s-section>
