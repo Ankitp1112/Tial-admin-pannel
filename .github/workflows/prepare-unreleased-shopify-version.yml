@@ -1,4 +1,4 @@
-name: Prepare unreleased TIAL Shopify app version
+name: Release TIAL customer account extensions
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  prepare-unreleased-version:
+  release-customer-account-version:
     runs-on: ubuntu-latest
     env:
       SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_SERVICE_ACCOUNT_TOKEN }}
@@ -44,5 +44,5 @@ jobs:
       - name: Build all app extensions
         run: shopify app build --config tial-accounts --no-input
 
-      - name: Create an unreleased Shopify app version
-        run: shopify app deploy --config tial-accounts --no-release --no-input
+      - name: Release TIAL customer account extensions
+        run: shopify app deploy --config tial-accounts --no-input
