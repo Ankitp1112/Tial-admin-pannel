@@ -10,7 +10,7 @@ extension_directories = [
 web_directories = []
 
 [access_scopes]
-scopes = "read_products,write_products,read_content,write_content,read_files,write_files,read_orders,read_customers,read_reports,read_inventory,write_inventory,read_locations,customer_read_customers,customer_read_orders"
+scopes = "read_products,write_products,read_content,write_content,read_files,write_files,read_orders,read_customers,read_reports,read_inventory,write_inventory,read_locations,customer_read_customers,customer_read_orders,customer_write_customers"
 use_legacy_install_flow = true
 
 [auth]
