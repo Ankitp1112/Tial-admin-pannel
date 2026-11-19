@@ -26,6 +26,15 @@ const CUSTOMER_QUERY = `
   }
 `;
 
+const UPDATE_CUSTOMER = `
+  mutation TialUpdateCustomer($input: CustomerUpdateInput!) {
+    customerUpdate(input: $input) {
+      customer { firstName lastName }
+      userErrors { field message code }
+    }
+  }
+`;
+
 export default () => {
   render(<TialAccountPage />, document.body);
 };
@@ -57,6 +66,12 @@ function AccountDestination({ title, description, href, action = 'Open' }) {
 function TialAccountPage() {
   const [customer, setCustomer] = useState(null);
   const [error, setError] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -71,7 +86,11 @@ function TialAccountPage() {
       })
       .then(({ data, errors }) => {
         if (errors?.length || !data?.customer) throw new Error('Account data unavailable');
-        if (active) setCustomer(data.customer);
+        if (active) {
+          setCustomer(data.customer);
+          setFirstName(data.customer.firstName ?? '');
+          setLastName(data.customer.lastName ?? '');
+        }
       })
       .catch(() => {
         if (active) setError('Your account details could not be loaded. Please refresh to try again.');
@@ -79,12 +98,45 @@ function TialAccountPage() {
     return () => { active = false; };
   }, []);
 
+  async function saveProfile(event) {
+    event?.preventDefault?.();
+    setSaving(true);
+    setProfileMessage('');
+    setProfileError('');
+    try {
+      const response = await fetch(ACCOUNT_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: UPDATE_CUSTOMER,
+          variables: { input: { firstName: firstName.trim(), lastName: lastName.trim() } },
+        }),
+      });
+      if (!response.ok) throw new Error('We could not save your profile. Please try again.');
+      const result = await response.json();
+      const payload = result?.data?.customerUpdate;
+      const userErrors = payload?.userErrors ?? [];
+      if (result.errors?.length || userErrors.length || !payload?.customer) {
+        throw new Error(userErrors.map((item) => item.message).join(' ') || 'Your profile could not be updated.');
+      }
+      setCustomer((current) => ({ ...current, ...payload.customer }));
+      setFirstName(payload.customer.firstName ?? '');
+      setLastName(payload.customer.lastName ?? '');
+      setEditing(false);
+      setProfileMessage('Your TIAL profile has been updated successfully.');
+    } catch (saveError) {
+      setProfileError(saveError.message || 'Your profile could not be saved. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (error) {
     return (
       <s-page heading="YOUR STYLE, YOUR SPACE">
         <s-section>
           <s-banner tone="critical">{error}</s-banner>
-          <s-button href="shopify:customer-account/profile" variant="secondary">Open profile</s-button>
+          <s-button href="shopify:customer-account/profile" variant="secondary">Open secure account settings</s-button>
         </s-section>
       </s-page>
     );
@@ -101,9 +153,9 @@ function TialAccountPage() {
     );
   }
 
-  const firstName = customer.firstName?.trim();
   const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'TIAL customer';
   const email = customer.emailAddress?.emailAddress ?? '';
+  const phone = customer.phoneNumber?.phoneNumber ?? '';
   const orders = customer.orders?.nodes ?? [];
   const latestOrder = orders[0];
 
@@ -112,11 +164,10 @@ function TialAccountPage() {
       <s-section>
         <s-stack direction="block" gap="small">
           <s-badge tone="info">TIAL MEMBER SPACE</s-badge>
-          <s-heading>{firstName ? `Welcome back, ${firstName}.` : 'Welcome to your TIAL space.'}</s-heading>
+          <s-heading>{customer.firstName?.trim() ? `Welcome back, ${customer.firstName.trim()}.` : 'Welcome to your TIAL space.'}</s-heading>
           <s-text color="subdued">Your style, your orders, and everything you need — all in one place.</s-text>
           <s-text type="strong">{fullName}</s-text>
           {email ? <s-text color="subdued">{email}</s-text> : null}
-          <s-button href="shopify:customer-account/profile">Manage my profile</s-button>
         </s-stack>
       </s-section>
 
@@ -134,12 +185,37 @@ function TialAccountPage() {
             href="https://tial.in/pages/wishlist"
             action="View saved styles"
           />
-          <AccountDestination
-            title="My Profile"
-            description="Update your personal details and the contact information for your account."
-            href="shopify:customer-account/profile"
-            action="Edit profile"
-          />
+          <s-box padding="base" border="base" borderRadius="large">
+            <s-stack direction="block" gap="base">
+              <s-heading>My TIAL Profile</s-heading>
+              <s-text color="subdued">Your personal details, presented in one place.</s-text>
+              {profileMessage ? <s-banner tone="success">{profileMessage}</s-banner> : null}
+              {profileError ? <s-banner tone="critical">{profileError}</s-banner> : null}
+              {editing ? (
+                <s-form onSubmit={saveProfile}>
+                  <s-stack direction="block" gap="base">
+                    <s-text-field label="First name" name="firstName" value={firstName} onChange={(event) => setFirstName(event.currentTarget.value)} />
+                    <s-text-field label="Last name" name="lastName" value={lastName} onChange={(event) => setLastName(event.currentTarget.value)} />
+                    {email ? <s-text color="subdued">Email: {email}</s-text> : null}
+                    {phone ? <s-text color="subdued">Phone: {phone}</s-text> : null}
+                    <s-stack direction="inline" gap="base">
+                      <s-button type="submit" disabled={saving || !firstName.trim()}> {saving ? 'Saving…' : 'Save profile'} </s-button>
+                      <s-button variant="secondary" disabled={saving} onClick={() => { setFirstName(customer.firstName ?? ''); setLastName(customer.lastName ?? ''); setEditing(false); setProfileError(''); }}>Cancel</s-button>
+                    </s-stack>
+                  </s-stack>
+                </s-form>
+              ) : (
+                <s-stack direction="block" gap="small">
+                  <s-text type="strong">{fullName}</s-text>
+                  {email ? <s-text color="subdued">{email}</s-text> : null}
+                  {phone ? <s-text color="subdued">{phone}</s-text> : null}
+                  <s-button variant="secondary" onClick={() => { setProfileMessage(''); setProfileError(''); setEditing(true); }}>Edit personal details</s-button>
+                  <s-text color="subdued">Name changes are saved securely to your Shopify customer profile. Email and phone changes may require Shopify verification.</s-text>
+                  <s-button href="shopify:customer-account/profile" variant="tertiary">Email, phone & verification settings</s-button>
+                </s-stack>
+              )}
+            </s-stack>
+          </s-box>
           <AccountDestination
             title="Addresses"
             description="Manage your saved delivery addresses for a smoother checkout."
