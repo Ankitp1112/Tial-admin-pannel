@@ -11,6 +11,8 @@ The existing `shopify.app.tial-accounts.toml` in this repository already lists:
 
 Preserve all current Admin API scopes and app settings. These Customer Account API scopes are separate from Admin API `read_customers` and `read_orders`. The full-page extension reads customer details and orders and saves first/last-name edits, so all three scopes are required for the prepared feature set.
 
+**Live store audit (21 November 2026):** the installed `Tial Admin Connector` app currently has its existing Admin API scopes, but Shopify's installed-app scope list does not include any of the three Customer Account API scopes above. The app must be updated and the merchant must complete Shopify's reauthorization/approval flow before the account extension can read or update customer data.
+
 ## Two separate extensions — required by Shopify
 
 Shopify does not allow a full-page target and a profile-block target in the same extension. Keep these as two separate extension folders:
@@ -33,8 +35,9 @@ Each folder contains its own `shopify.extension.toml`, `package.json`, and sourc
 5. Preview both extensions in the Shopify Dev Console. Confirm the full-page extension and profile block are listed separately.
 6. Test with a signed-in customer who has orders and another who has none. Verify customer name/email, order date, total, payment and fulfilment status, and first/last-name save behavior.
 7. Run `shopify app deploy` only after previews pass. Review the generated app version and scopes before releasing it.
-8. In Shopify Admin, open **Settings → Customer accounts → Customize**. Add the TIAL full-page app page to customer-account navigation and place the profile block on the profile page.
-9. Verify both extensions from a signed-in customer account. Do not publish or modify the storefront theme as part of this process.
+8. Complete Shopify's requested reauthorization so the three Customer Account API scopes appear under the installed app.
+9. In Shopify Admin, open **Settings → Customer accounts → Customize**. Add the TIAL full-page app page to customer-account navigation and place the profile block on the profile page.
+10. Verify both extensions from a signed-in customer account. Do not publish or modify the storefront theme as part of this process.
 
 ## Security and scope boundaries
 
