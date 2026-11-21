@@ -4,6 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 
 const API_VERSION = '2026-10';
 const ACCOUNT_API = `shopify://customer-account/api/${API_VERSION}/graphql.json`;
+const STOREFRONT = 'https://rh2wpy-1u.myshopify.com';
 
 const CUSTOMER_QUERY = `
   query TialAccountOverview {
@@ -12,7 +13,7 @@ const CUSTOMER_QUERY = `
       lastName
       emailAddress { emailAddress }
       phoneNumber { phoneNumber }
-      orders(first: 4, reverse: true) {
+      orders(first: 3, sortKey: PROCESSED_AT, reverse: true) {
         nodes {
           id
           name
@@ -40,15 +41,45 @@ export default () => {
 };
 
 function money(amount, currency) {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || !currency) return 'Amount unavailable';
   try {
-    return Number(amount).toLocaleString(undefined, { style: 'currency', currency });
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2,
+    }).format(numericAmount);
   } catch {
-    return `${amount} ${currency}`;
+    return `${numericAmount.toFixed(2)} ${currency}`;
   }
 }
 
 function statusLabel(value, fallback) {
-  return String(value ?? fallback).replaceAll('_', ' ').toLowerCase();
+  if (!value) return fallback;
+  const labels = {
+    PAID: 'Paid',
+    PENDING: 'Payment pending',
+    PARTIALLY_PAID: 'Partially paid',
+    REFUNDED: 'Refunded',
+    PARTIALLY_REFUNDED: 'Partially refunded',
+    FULFILLED: 'Fulfilled',
+    UNFULFILLED: 'Unfulfilled',
+    PARTIALLY_FULFILLED: 'Partially fulfilled',
+    IN_PROGRESS: 'In progress',
+    ON_HOLD: 'On hold',
+  };
+  return labels[value] || String(value).replaceAll('_', ' ').toLowerCase();
+}
+
+function dateLabel(value) {
+  if (!value) return 'Date unavailable';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
 }
 
 function AccountDestination({ title, description, href, action = 'Open' }) {
@@ -63,8 +94,27 @@ function AccountDestination({ title, description, href, action = 'Open' }) {
   );
 }
 
+function OrderCard({ order }) {
+  return (
+    <s-box padding="base" border="base" borderRadius="large">
+      <s-stack direction="block" gap="small">
+        <s-stack direction="inline" alignItems="center" justifyContent="space-between">
+          <s-text type="strong">{order.name}</s-text>
+          <s-text type="strong">{money(order.totalPrice?.amount, order.totalPrice?.currencyCode)}</s-text>
+        </s-stack>
+        <s-text color="subdued">{dateLabel(order.processedAt)}</s-text>
+        <s-stack direction="inline" gap="small">
+          <s-badge>{statusLabel(order.financialStatus, 'Payment status unavailable')}</s-badge>
+          <s-badge>{statusLabel(order.fulfillmentStatus, 'Unfulfilled')}</s-badge>
+        </s-stack>
+      </s-stack>
+    </s-box>
+  );
+}
+
 function TialAccountPage() {
   const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
   const [firstName, setFirstName] = useState('');
@@ -85,7 +135,9 @@ function TialAccountPage() {
         return response.json();
       })
       .then(({ data, errors }) => {
-        if (errors?.length || !data?.customer) throw new Error('Account data unavailable');
+        if (errors?.length || !data?.customer) {
+          throw new Error(errors?.[0]?.message || 'Account data unavailable');
+        }
         if (active) {
           setCustomer(data.customer);
           setFirstName(data.customer.firstName ?? '');
@@ -93,13 +145,20 @@ function TialAccountPage() {
         }
       })
       .catch(() => {
-        if (active) setError('Your account details could not be loaded. Please refresh to try again.');
+        if (active) setError('We could not load your TIAL account details. Please refresh and try again.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => { active = false; };
   }, []);
 
   async function saveProfile(event) {
     event?.preventDefault?.();
+    if (!firstName.trim()) {
+      setProfileError('Please enter your first name.');
+      return;
+    }
     setSaving(true);
     setProfileMessage('');
     setProfileError('');
@@ -117,13 +176,13 @@ function TialAccountPage() {
       const payload = result?.data?.customerUpdate;
       const userErrors = payload?.userErrors ?? [];
       if (result.errors?.length || userErrors.length || !payload?.customer) {
-        throw new Error(userErrors.map((item) => item.message).join(' ') || 'Your profile could not be updated.');
+        throw new Error(userErrors.map((item) => item.message).join(' ') || result.errors?.[0]?.message || 'Your profile could not be updated.');
       }
       setCustomer((current) => ({ ...current, ...payload.customer }));
       setFirstName(payload.customer.firstName ?? '');
       setLastName(payload.customer.lastName ?? '');
       setEditing(false);
-      setProfileMessage('Your TIAL profile has been updated successfully.');
+      setProfileMessage('Your TIAL profile has been updated.');
     } catch (saveError) {
       setProfileError(saveError.message || 'Your profile could not be saved. Please try again.');
     } finally {
@@ -131,23 +190,24 @@ function TialAccountPage() {
     }
   }
 
-  if (error) {
+  if (loading) {
     return (
-      <s-page heading="YOUR STYLE, YOUR SPACE">
+      <s-page heading="MY ACCOUNT">
         <s-section>
-          <s-banner tone="critical">{error}</s-banner>
-          <s-button href="shopify:customer-account/profile" variant="secondary">Open secure account settings</s-button>
+          <s-spinner size="small-100" accessibilityLabel="Loading your TIAL account" />
+          <s-text color="subdued">Loading your TIAL account…</s-text>
         </s-section>
       </s-page>
     );
   }
 
-  if (!customer) {
+  if (error || !customer) {
     return (
-      <s-page heading="YOUR STYLE, YOUR SPACE">
+      <s-page heading="MY ACCOUNT">
         <s-section>
-          <s-spinner size="small-100" accessibilityLabel="Loading your TIAL account" />
-          <s-text color="subdued">Preparing your TIAL space…</s-text>
+          <s-banner tone="critical">{error || 'Your account details are temporarily unavailable.'}</s-banner>
+          <s-button href="shopify:customer-account/profile" variant="secondary">Open secure account settings</s-button>
+          <s-button href="shopify:customer-account/orders" variant="tertiary">View orders</s-button>
         </s-section>
       </s-page>
     );
@@ -157,118 +217,90 @@ function TialAccountPage() {
   const email = customer.emailAddress?.emailAddress ?? '';
   const phone = customer.phoneNumber?.phoneNumber ?? '';
   const orders = customer.orders?.nodes ?? [];
-  const latestOrder = orders[0];
 
   return (
-    <s-page heading="YOUR STYLE, YOUR SPACE">
+    <s-page heading="MY ACCOUNT">
       <s-section>
         <s-stack direction="block" gap="small">
-          <s-badge tone="info">TIAL MEMBER SPACE</s-badge>
-          <s-heading>{customer.firstName?.trim() ? `Welcome back, ${customer.firstName.trim()}.` : 'Welcome to your TIAL space.'}</s-heading>
-          <s-text color="subdued">Your style, your orders, and everything you need — all in one place.</s-text>
+          <s-badge tone="info">TIAL MEMBER</s-badge>
+          <s-heading>{customer.firstName?.trim() ? `Welcome back, ${customer.firstName.trim()}.` : 'Welcome to TIAL.'}</s-heading>
+          <s-text color="subdued">Your orders, details and saved addresses — together in one place.</s-text>
           <s-text type="strong">{fullName}</s-text>
           {email ? <s-text color="subdued">{email}</s-text> : null}
         </s-stack>
       </s-section>
 
-      <s-section heading="YOUR ACCOUNT">
-        <s-stack direction="block" gap="base">
-          <AccountDestination
-            title="My Orders"
-            description={latestOrder ? `Latest purchase: ${latestOrder.name} · ${money(latestOrder.totalPrice.amount, latestOrder.totalPrice.currencyCode)}` : 'Track purchases, check fulfilment updates, and view your order history.'}
-            href="shopify:customer-account/orders"
-            action={latestOrder ? 'Track my orders' : 'Explore orders'}
-          />
-          <AccountDestination
-            title="Wishlist"
-            description="Keep the TIAL pieces you love close and return to them whenever you like."
-            href="https://tial.in/pages/wishlist"
-            action="View saved styles"
-          />
-          <s-box padding="base" border="base" borderRadius="large">
-            <s-stack direction="block" gap="base">
-              <s-heading>My TIAL Profile</s-heading>
-              <s-text color="subdued">Your personal details, presented in one place.</s-text>
-              {profileMessage ? <s-banner tone="success">{profileMessage}</s-banner> : null}
-              {profileError ? <s-banner tone="critical">{profileError}</s-banner> : null}
-              {editing ? (
-                <s-form onSubmit={saveProfile}>
-                  <s-stack direction="block" gap="base">
-                    <s-text-field label="First name" name="firstName" value={firstName} onChange={(event) => setFirstName(event.currentTarget.value)} />
-                    <s-text-field label="Last name" name="lastName" value={lastName} onChange={(event) => setLastName(event.currentTarget.value)} />
-                    {email ? <s-text color="subdued">Email: {email}</s-text> : null}
-                    {phone ? <s-text color="subdued">Phone: {phone}</s-text> : null}
-                    <s-stack direction="inline" gap="base">
-                      <s-button type="submit" disabled={saving || !firstName.trim()}> {saving ? 'Saving…' : 'Save profile'} </s-button>
-                      <s-button variant="secondary" disabled={saving} onClick={() => { setFirstName(customer.firstName ?? ''); setLastName(customer.lastName ?? ''); setEditing(false); setProfileError(''); }}>Cancel</s-button>
-                    </s-stack>
-                  </s-stack>
-                </s-form>
-              ) : (
-                <s-stack direction="block" gap="small">
-                  <s-text type="strong">{fullName}</s-text>
-                  {email ? <s-text color="subdued">{email}</s-text> : null}
-                  {phone ? <s-text color="subdued">{phone}</s-text> : null}
-                  <s-button variant="secondary" onClick={() => { setProfileMessage(''); setProfileError(''); setEditing(true); }}>Edit personal details</s-button>
-                  <s-text color="subdued">Name changes are saved securely to your Shopify customer profile. Email and phone changes may require Shopify verification.</s-text>
-                  <s-button href="shopify:customer-account/profile" variant="tertiary">Email, phone & verification settings</s-button>
-                </s-stack>
-              )}
-            </s-stack>
-          </s-box>
-          <AccountDestination
-            title="Addresses"
-            description="Manage your saved delivery addresses for a smoother checkout."
-            href="shopify:customer-account/addresses"
-            action="Manage addresses"
-          />
-          <s-box padding="base" border="base" borderRadius="large">
-            <s-stack direction="block" gap="small">
-              <s-stack direction="inline" alignItems="center" justifyContent="space-between">
-                <s-heading>Rewards</s-heading>
-                <s-badge tone="info">Coming soon</s-badge>
-              </s-stack>
-              <s-text color="subdued">A little something extra for being part of TIAL. Our rewards experience is on its way.</s-text>
-            </s-stack>
-          </s-box>
-          <AccountDestination
-            title="Help & Support"
-            description="Need help with an order, delivery, or anything TIAL? We're here for you."
-            href="https://tial.in/pages/contact"
-            action="Get support"
-          />
-        </s-stack>
-      </s-section>
-
-      <s-section heading="RECENT ACTIVITY">
+      <s-section heading="ORDER HISTORY">
         {orders.length ? (
           <s-stack direction="block" gap="base">
-            {orders.slice(0, 3).map((order) => (
-              <s-box key={order.id} padding="base" border="base" borderRadius="large">
-                <s-stack direction="block" gap="small">
-                  <s-stack direction="inline" alignItems="center" justifyContent="space-between">
-                    <s-text type="strong">{order.name}</s-text>
-                    <s-text type="strong">{money(order.totalPrice.amount, order.totalPrice.currencyCode)}</s-text>
-                  </s-stack>
-                  <s-text color="subdued">{order.processedAt ? new Date(order.processedAt).toLocaleDateString() : 'Order date unavailable'}</s-text>
-                  <s-stack direction="inline" gap="small">
-                    <s-badge>{statusLabel(order.financialStatus, 'payment status unavailable')}</s-badge>
-                    <s-badge>{statusLabel(order.fulfillmentStatus, 'not fulfilled')}</s-badge>
-                  </s-stack>
-                </s-stack>
-              </s-box>
-            ))}
+            {orders.map((order) => <OrderCard key={order.id} order={order} />)}
             <s-button href="shopify:customer-account/orders" variant="secondary">View all orders</s-button>
           </s-stack>
         ) : (
           <s-box padding="base" border="base" borderRadius="large">
             <s-stack direction="block" gap="small">
-              <s-heading>Your TIAL story starts here.</s-heading>
-              <s-text color="subdued">Your orders will appear here after your first purchase.</s-text>
-              <s-button href="https://tial.in/collections/all" variant="secondary">Explore the collection</s-button>
+              <s-heading>No orders yet</s-heading>
+              <s-text color="subdued">When you place your first TIAL order, it will appear here.</s-text>
+              <s-button href={`${STOREFRONT}/collections/all`} variant="secondary">Explore TIAL</s-button>
             </s-stack>
           </s-box>
         )}
+      </s-section>
+
+      <s-section heading="ACCOUNT DETAILS">
+        <s-box padding="base" border="base" borderRadius="large">
+          <s-stack direction="block" gap="base">
+            {profileMessage ? <s-banner tone="success">{profileMessage}</s-banner> : null}
+            {profileError ? <s-banner tone="critical">{profileError}</s-banner> : null}
+            {editing ? (
+              <s-form onSubmit={saveProfile}>
+                <s-stack direction="block" gap="base">
+                  <s-text-field label="First name" name="firstName" value={firstName} onChange={(event) => setFirstName(event.currentTarget.value)} />
+                  <s-text-field label="Last name" name="lastName" value={lastName} onChange={(event) => setLastName(event.currentTarget.value)} />
+                  <s-text color="subdued">Email and phone changes are managed through Shopify's secure verification flow.</s-text>
+                  <s-stack direction="inline" gap="base">
+                    <s-button type="submit" disabled={saving || !firstName.trim()}>{saving ? 'Saving…' : 'Save changes'}</s-button>
+                    <s-button variant="secondary" disabled={saving} onClick={() => { setFirstName(customer.firstName ?? ''); setLastName(customer.lastName ?? ''); setEditing(false); setProfileError(''); }}>Cancel</s-button>
+                  </s-stack>
+                </s-stack>
+              </s-form>
+            ) : (
+              <s-stack direction="block" gap="small">
+                <s-text type="strong">{fullName}</s-text>
+                {email ? <s-text color="subdued">{email}</s-text> : null}
+                {phone ? <s-text color="subdued">{phone}</s-text> : null}
+                <s-button variant="secondary" onClick={() => { setProfileMessage(''); setProfileError(''); setEditing(true); }}>Edit name</s-button>
+                <s-button href="shopify:customer-account/profile" variant="tertiary">Manage email and phone</s-button>
+              </s-stack>
+            )}
+          </s-stack>
+        </s-box>
+      </s-section>
+
+      <s-section heading="SAVED ADDRESSES">
+        <AccountDestination
+          title="Delivery addresses"
+          description="Add, edit or remove saved addresses and choose your default delivery address."
+          href="shopify:customer-account/addresses"
+          action="Manage addresses"
+        />
+      </s-section>
+
+      <s-section heading="MORE FROM TIAL">
+        <s-stack direction="block" gap="base">
+          <AccountDestination
+            title="Wishlist"
+            description="Return to the styles you have saved."
+            href={`${STOREFRONT}/pages/wishlist`}
+            action="View wishlist"
+          />
+          <AccountDestination
+            title="Help & support"
+            description="Get help with orders, delivery, returns or product questions."
+            href={`${STOREFRONT}/pages/contact`}
+            action="Contact TIAL"
+          />
+        </s-stack>
       </s-section>
     </s-page>
   );

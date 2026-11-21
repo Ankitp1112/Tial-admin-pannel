@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "dependencies": {
     "@shopify/ui-extensions": "2026.10.x",
-    "preact": "^10.10.x",
-    "@preact/signals": "^2.11.4"
+    "preact": "^10.10.x"
   }
 }
