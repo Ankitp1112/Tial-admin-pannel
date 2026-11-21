@@ -5,7 +5,7 @@ import { useEffect, useState } from 'preact/hooks';
 const API_VERSION = '2026-10';
 const CUSTOMER_API = `shopify://customer-account/api/${API_VERSION}/graphql.json`;
 
-export default () => {
+export default async () => {
   render(<TialAccount />, document.body);
 };
 
